@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.29)
+project(KurvaSneg C)
+set(CMAKE_C_STANDARD 17)
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIR})
+add_executable(KurvaSneg main.c)
+target_link_libraries(KurvaSneg ${CURSES_LIBRARIES})
