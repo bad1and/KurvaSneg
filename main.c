@@ -31,11 +31,11 @@ void keywork2(char new_maze[height][width]) {
     drawmain2(width, height, new_maze, PosX, 0);
     // Управление движением только в верхнем ряду
     key = getch();
-    if (key == KEY_UP) {
-        if (PosY > 0) PosY--;
+    if (key == KEY_RIGHT) {
+        if (PosX < width - 1) PosX++;
     }
-    if (key == KEY_DOWN) {
-        if (PosY < height - 1) PosY++;
+    if (key == KEY_LEFT) {
+        if (PosX > 0) PosX--;
     }
 }
 
