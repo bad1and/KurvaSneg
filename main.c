@@ -11,37 +11,44 @@ int n_button;
 char new_maze[240][67];
 char maze[240][67];
 
-
+//создаем матрицу
+void createlab2(int width, int height, char new_maze[height][width]) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            new_maze[y][x] = '.';
+        }
+    }
+}
 
 // отображаем маорицу
 void drawmain2(int width, int height, char new_maze[height][width], int PosX, int PosY) {
-    clear(); // Очищаем экран
+    clear();
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             if (x == PosX && y == PosY) {
-                mvaddch(y, x, '*'); //Player
+                mvaddch(y, x, '*'); // Игрок
             } else {
-                mvaddch(y, x, new_maze[y][x]); //Lab
+                mvaddch(y, x, new_maze[y][x]); // Лабиринт
             }
         }
     }
 }
 
-void keywork2(char new_maze[height][width]) {
+void keywork2(int width, int height, char new_maze[height][width]) {
     drawmain2(width, height, new_maze, PosX, 0);
+
     // Управление движением только в верхнем ряду
     key = getch();
-    if (key == KEY_RIGHT) {
-        if (PosX < width - 1) PosX++;
+    if (key == KEY_RIGHT && PosX < width - 1) {
+        PosX++;
     }
-    if (key == KEY_LEFT) {
-        if (PosX > 0) PosX--;
+    if (key == KEY_LEFT && PosX > 0) {
+        PosX--;
     }
 }
 
 
-//копируем матрицу
-void matrix_copy(char maze[height][width]) {
+void matrix_copy(int width, int height, char maze[height][width], char new_maze[height][width]) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             new_maze[y][x] = maze[y][x];
@@ -188,8 +195,8 @@ int main() {
                 // Отображаем лаб
                 keywork(maze);
                 if (key == 'h') {
-                    char new_maze[height][width];
-                    matrix_copy(maze);
+                    createlab2(width, height, new_maze);
+                    matrix_copy(width, height, maze, new_maze);
                     keypad(stdscr, FALSE);
                     break; // Переключаем режим верхней строки
                 }
@@ -205,22 +212,15 @@ int main() {
             keypad(stdscr, TRUE);
             clear();
                 while (1) {
-                keywork2(new_maze);
+                    keywork2(width, height, new_maze);
                 if (key == 27) {  // Выход по клавише ESC
                     keypad(stdscr, FALSE);
                     break;
                 }
             }
-            // for (int y = 0; y < height; y++) {
-            //     for (int x = 0; x < width; x++) {
-            //         printw("%c", new_maze[y][x]);
-            //     }
-            //     printw("\n");
-            // }
-            // getch();
         }
 
-        // у пункт
+        // 3 пункт
         if ((position == 2 && n_button == 10) || n_button == 51) {
             clear();
             instruction();
