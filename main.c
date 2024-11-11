@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ncurses.h>
+#include <unistd.h>
 
 int key;
 int width, height;
@@ -10,6 +11,21 @@ int position = 0;
 int n_button;
 char new_maze[240][67];
 char maze[240][67];
+int sneg_counter = 0;
+
+#include <stdio.h>
+
+void print_wall_coordinates(int width, int height, char new_maze[height][width]) {
+    printw("Координаты всех символов '#':\n");
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (new_maze[y][x] == '#') {
+                printw("(%d, %d)\n", y, x);
+            }
+        }
+    }
+}
+
 
 //создаем матрицу
 void createlab2(int width, int height, char new_maze[height][width]) {
@@ -34,16 +50,43 @@ void drawmain2(int width, int height, char new_maze[height][width], int PosX, in
     }
 }
 
+void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
+    int y = PosY;
+
+
+    while (y < height - 1) {
+        if (new_maze[y + 1][PosX] == '#' || new_maze[y + 1][PosX] == '*') {
+            new_maze[y][PosX] = '*';
+            break;
+        }
+
+        new_maze[y][PosX] = '.';
+        y++;
+        new_maze[y][PosX] = '*';
+
+        drawmain2(width, height, new_maze, PosX, y);
+        refresh();
+        usleep(500000);
+    }
+
+    if (y == height - 1 || new_maze[y + 1][PosX] == '#') {
+        new_maze[y][PosX] = '*';
+    }
+}
+
+
 void keywork2(int width, int height, char new_maze[height][width]) {
     drawmain2(width, height, new_maze, PosX, 0);
 
-    // Управление движением только в верхнем ряду
     key = getch();
-    if (key == KEY_RIGHT && PosX < width - 1) {
-        PosX++;
+    if (key == KEY_RIGHT) {
+        if (PosX < width - 1) PosX++;
     }
-    if (key == KEY_LEFT && PosX > 0) {
-        PosX--;
+    if (key == KEY_LEFT) {
+        if (PosX > 0) PosX--;
+    }
+    if (key == 'j') {
+        otrisovka_snega(PosY, PosX, new_maze);
     }
 }
 
@@ -126,7 +169,9 @@ void menu() {
         } else {
             printw("%s\n", screen[i]);
         }
-
+        if (i == 4) {
+            print_wall_coordinates(width, height, new_maze);
+        }
     }
 }
 
@@ -189,8 +234,10 @@ int main() {
             }
             clear();
             char maze[width][height];
+
             PosX = 1, PosY = 1;
             createlab(width, height, maze);
+
             while (1) {
                 // Отображаем лаб
                 keywork(maze);
@@ -211,6 +258,7 @@ int main() {
         if ((position == 1 && n_button == 10) || n_button == 50) {
             keypad(stdscr, TRUE);
             clear();
+            PosY = 0, PosX = 0;
                 while (1) {
                     keywork2(width, height, new_maze);
                 if (key == 27) {  // Выход по клавише ESC
