@@ -4,6 +4,7 @@
 #include <ncurses.h>
 #include <unistd.h>
 
+
 int key;
 int width, height;
 int PosX = 1, PosY = 1;
@@ -13,7 +14,7 @@ char new_maze[240][67];
 char maze[240][67];
 int sneg_counter = 0;
 
-#include <stdio.h>
+
 
 void print_wall_coordinates(int width, int height, char new_maze[height][width]) {
     printw("Координаты всех символов '#':\n");
@@ -25,7 +26,6 @@ void print_wall_coordinates(int width, int height, char new_maze[height][width])
         }
     }
 }
-
 
 //создаем матрицу
 void createlab2(int width, int height, char new_maze[height][width]) {
@@ -52,27 +52,54 @@ void drawmain2(int width, int height, char new_maze[height][width], int PosX, in
 
 void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
     int y = PosY;
+    int snowflake_count = 0;
 
+    // Подсчёт снежинок сверху вниз, чтобы проверить, сколько снежинок уже в этом столбце
+    for (int i = 0; i < height; i++) {
+        if (new_maze[i][PosX] == '*') {
+            snowflake_count++;
+        }
+    }
 
     while (y < height - 1) {
+        // Проверка условия остановки при столкновении с # или другой снежинкой
         if (new_maze[y + 1][PosX] == '#' || new_maze[y + 1][PosX] == '*') {
-            new_maze[y][PosX] = '*';
+            // Если в столбце уже две снежинки, падаем влево
+            if (snowflake_count >= 2) {
+                // Проверяем, что слева и снизу свободно
+                if (PosX > 0 && new_maze[y + 1][PosX - 1] == '.') {
+                    if (new_maze[y + 2][PosX - 1] == '.') {
+                        new_maze[y + 2][PosX - 1] = '*';
+                    }else{new_maze[y + 1][PosX - 1] = '*';}
+                     // Падаем влево
+                    new_maze[y][PosX] = '.'; // Очищаем текущую позицию
+                } else {
+                    // Если влево не получается упасть, остаёмся на месте
+                    new_maze[y][PosX] = '*';
+                }
+            } else {
+                // Если в столбце меньше двух снежинок, просто фиксируемся на текущей позиции
+                new_maze[y][PosX] = '*';
+            }
             break;
         }
 
-        new_maze[y][PosX] = '.';
+        // Обновляем позицию снежинки
+        new_maze[y][PosX] = '.';  // Очищаем текущую позицию
         y++;
-        new_maze[y][PosX] = '*';
+        new_maze[y][PosX] = '*';  // Перемещаем снежинку вниз
 
         drawmain2(width, height, new_maze, PosX, y);
         refresh();
-        usleep(500000);
+        usleep(300000);
     }
 
+    // Окончательное размещение снежинки
     if (y == height - 1 || new_maze[y + 1][PosX] == '#') {
         new_maze[y][PosX] = '*';
     }
 }
+
 
 
 void keywork2(int width, int height, char new_maze[height][width]) {
@@ -89,7 +116,6 @@ void keywork2(int width, int height, char new_maze[height][width]) {
         otrisovka_snega(PosY, PosX, new_maze);
     }
 }
-
 
 void matrix_copy(int width, int height, char maze[height][width], char new_maze[height][width]) {
     for (int y = 0; y < height; y++) {
