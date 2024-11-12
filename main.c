@@ -6,15 +6,25 @@
 
 
 int key;
-int width, height;
+int width = 0, height = 0;
 int PosX = 1, PosY = 1;
 int position = 0;
 int n_button;
 char new_maze[240][67];
 char maze[240][67];
 int sneg_counter = 0;
+int time_set = 300000;
 
-
+void print_zvezd_coordinates(int width, int height, char new_maze[height][width]) {
+    printw("Координаты всех символов '*':\n");
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (new_maze[y][x] == '*') {
+                printw("(%d, %d)\n", y, x);
+            }
+        }
+    }
+}
 
 void print_wall_coordinates(int width, int height, char new_maze[height][width]) {
     printw("Координаты всех символов '#':\n");
@@ -48,53 +58,73 @@ void drawmain2(int width, int height, char new_maze[height][width], int PosX, in
             }
         }
     }
+    printw("\n\nE - бросить снежинку");
+    printw("\n\nВВЕРХ - ускорить, ВНИЗ - замедлить");
+    printw("\nСкорость usleep - %i\n" , time_set);
+
+    print_zvezd_coordinates(width, height, new_maze);
 }
 
 void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
+    // Проверка первой строки: если под ней нет свободного места, отменяем размещение
+    if (PosY == 0 && (new_maze[PosY + 1][PosX] == '#' || new_maze[PosY + 1][PosX] == '*')) {
+        return; // Прерываем функцию, не создавая снежинку
+    }
+
     int y = PosY;
     int snowflake_count = 0;
 
-    // Подсчёт снежинок сверху вниз, чтобы проверить, сколько снежинок уже в этом столбце
+    // Подсчет снежинок в текущем столбце
     for (int i = 0; i < height; i++) {
         if (new_maze[i][PosX] == '*') {
             snowflake_count++;
         }
     }
 
+    // Основной цикл падения снежинки
     while (y < height - 1) {
-        // Проверка условия остановки при столкновении с # или другой снежинкой
+        // Проверка на препятствия (# или снежинка снизу)
         if (new_maze[y + 1][PosX] == '#' || new_maze[y + 1][PosX] == '*') {
-            // Если в столбце уже две снежинки, падаем влево
+            // Если уже есть две снежинки в этом столбце, смещаем влево или вправо
             if (snowflake_count >= 2) {
-                // Проверяем, что слева и снизу свободно
+                // Сначала проверим левую сторону
                 if (PosX > 0 && new_maze[y + 1][PosX - 1] == '.') {
-                    if (new_maze[y + 2][PosX - 1] == '.') {
-                        new_maze[y + 2][PosX - 1] = '*';
-                    }else{new_maze[y + 1][PosX - 1] = '*';}
-                     // Падаем влево
-                    new_maze[y][PosX] = '.'; // Очищаем текущую позицию
+                    int newY = y + 1;
+                    while (newY < height - 1 && new_maze[newY + 1][PosX - 1] == '.') {
+                        newY++;
+                    }
+                    new_maze[newY][PosX - 1] = '*';
+                    break;
+                }
+                // Проверка правой стороны
+                else if (PosX < width - 1 && new_maze[y + 1][PosX + 1] == '.') {
+                    int newY = y + 1;
+                    while (newY < height - 1 && new_maze[newY + 1][PosX + 1] == '.') {
+                        newY++;
+                    }
+                    new_maze[newY][PosX + 1] = '*';
+                    break;
                 } else {
-                    // Если влево не получается упасть, остаёмся на месте
-                    new_maze[y][PosX] = '*';
+                    new_maze[y][PosX] = '*'; // Если нет бокового пространства, фиксируем снежинку
+                    break;
                 }
             } else {
-                // Если в столбце меньше двух снежинок, просто фиксируемся на текущей позиции
-                new_maze[y][PosX] = '*';
+                new_maze[y][PosX] = '*'; // Фиксируем снежинку
+                break;
             }
-            break;
         }
 
-        // Обновляем позицию снежинки
+        // Перемещаем снежинку вниз
         new_maze[y][PosX] = '.';  // Очищаем текущую позицию
         y++;
         new_maze[y][PosX] = '*';  // Перемещаем снежинку вниз
 
         drawmain2(width, height, new_maze, PosX, y);
         refresh();
-        usleep(300000);
+        usleep(time_set);
     }
 
-    // Окончательное размещение снежинки
+    // Финальное размещение снежинки
     if (y == height - 1 || new_maze[y + 1][PosX] == '#') {
         new_maze[y][PosX] = '*';
     }
@@ -112,8 +142,14 @@ void keywork2(int width, int height, char new_maze[height][width]) {
     if (key == KEY_LEFT) {
         if (PosX > 0) PosX--;
     }
-    if (key == 'j') {
+    if (key == 'e') {
         otrisovka_snega(PosY, PosX, new_maze);
+    }
+    if (key == KEY_UP) {
+        time_set-= 100000;
+    }
+    if (key == KEY_DOWN) {
+        time_set+= 100000;
     }
 }
 
@@ -137,6 +173,9 @@ void drawmain(int width, int height, char maze[height][width], int PosX, int Pos
             }
         }
     }
+    printw("\n\nQ - поставить препятствие");
+    printw("\nDELETE - убрать препятствие");
+    printw("\nW - сохранить и выйти");
 }
 
 void keywork(char maze[height][width]) {
@@ -181,8 +220,8 @@ void menu() {
     printw("%s", "-----------------\n");
     printw("%s", "\n");
 
-    char screen[5][60] = {
-        "1. Задать размеры и создать поля",
+    char screen[5][80] = {
+        "1. Задать размеры и создать препятствия",
         "2. Играть",
         "3. Инструкция",
         "4. Выход",
@@ -267,7 +306,7 @@ int main() {
             while (1) {
                 // Отображаем лаб
                 keywork(maze);
-                if (key == 'h') {
+                if (key == 'w') {
                     createlab2(width, height, new_maze);
                     matrix_copy(width, height, maze, new_maze);
                     keypad(stdscr, FALSE);
@@ -285,11 +324,17 @@ int main() {
             keypad(stdscr, TRUE);
             clear();
             PosY = 0, PosX = 0;
+            if (width < 1 && height < 1) {
+                printw("Ничего не ввели в первом пункте");
+                getch();
+                keypad(stdscr, FALSE);
+            }else {
                 while (1) {
                     keywork2(width, height, new_maze);
-                if (key == 27) {  // Выход по клавише ESC
-                    keypad(stdscr, FALSE);
-                    break;
+                    if (key == 27) {  // Выход по клавише ESC
+                        keypad(stdscr, FALSE);
+                        break;
+                    }
                 }
             }
         }
