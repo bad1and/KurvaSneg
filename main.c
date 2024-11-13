@@ -13,7 +13,9 @@ int n_button;
 char new_maze[240][67];
 char maze[240][67];
 int sneg_counter = 0;
-int time_set = 300000;
+int time_set = 200000;
+
+
 
 void print_zvezd_coordinates(int width, int height, char new_maze[height][width]) {
     printw("Координаты всех символов '*':\n");
@@ -25,7 +27,6 @@ void print_zvezd_coordinates(int width, int height, char new_maze[height][width]
         }
     }
 }
-
 void print_wall_coordinates(int width, int height, char new_maze[height][width]) {
     printw("Координаты всех символов '#':\n");
     for (int y = 0; y < height; y++) {
@@ -52,17 +53,17 @@ void drawmain2(int width, int height, char new_maze[height][width], int PosX, in
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             if (x == PosX && y == PosY) {
-                mvaddch(y, x, '*'); // Игрок
+                mvaddch(y, x, '*');
             } else {
-                mvaddch(y, x, new_maze[y][x]); // Лабиринт
+                mvaddch(y, x, new_maze[y][x]);
             }
         }
     }
     printw("\n\nE - бросить снежинку");
     printw("\n\nВВЕРХ - ускорить, ВНИЗ - замедлить");
-    printw("\nСкорость usleep - %i\n" , time_set);
+    printw("\nСкорость usleep(чем меньше тем быстрее) - %i\n", time_set / 100000);
 
-    print_zvezd_coordinates(width, height, new_maze);
+    // print_zvezd_coordinates(width, height, new_maze);
 }
 
 void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
@@ -74,47 +75,60 @@ void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
     int y = PosY;
     int snowflake_count = 0;
 
-    // Подсчет снежинок в текущем столбце
-    for (int i = 0; i < height; i++) {
+   for (int i = 0; i < height; i++) {
         if (new_maze[i][PosX] == '*') {
             snowflake_count++;
         }
     }
 
-    // Основной цикл падения снежинки
     while (y < height - 1) {
-        // Проверка на препятствия (# или снежинка снизу)
+        // Проверка условия остановки при столкновении с # или другой снежинкой
         if (new_maze[y + 1][PosX] == '#' || new_maze[y + 1][PosX] == '*') {
-            // Если уже есть две снежинки в этом столбце, смещаем влево или вправо
+            // Если в столбце уже две снежинки, пытаемся падать влево или вправо до упора
             if (snowflake_count >= 2) {
-                // Сначала проверим левую сторону
+                int newX = PosX;
+                int newY = y;
+
+                // Пробуем упасть влево до упора
                 if (PosX > 0 && new_maze[y + 1][PosX - 1] == '.') {
-                    int newY = y + 1;
-                    while (newY < height - 1 && new_maze[newY + 1][PosX - 1] == '.') {
+                    while (newY < height - 1 && new_maze[newY + 1][newX-1] == '.') {
+                        new_maze[newY][newX] = '.';      // Очищаем текущую позицию
+                        newX--;                     // Перемещаемся влево
                         newY++;
+                        new_maze[newY][newX] = '*';      // Ставим снежинку на новое место
+
+                        drawmain2(width, height, new_maze, newX, newY);
+                        refresh();
+                        usleep(time_set);
                     }
-                    new_maze[newY][PosX - 1] = '*';
                     break;
                 }
-                // Проверка правой стороны
+                // Пробуем упасть вправо до упора
                 else if (PosX < width - 1 && new_maze[y + 1][PosX + 1] == '.') {
-                    int newY = y + 1;
-                    while (newY < height - 1 && new_maze[newY + 1][PosX + 1] == '.') {
+                    while (newY < height - 1 && new_maze[newY + 1][newX + 1] == '.') {
+                        new_maze[newY][newX] = '.';      // Очищаем текущую позицию
+                        newX++;                          // Перемещаемся вправо
                         newY++;
+                        new_maze[newY][newX] = '*';      // Ставим снежинку на новое место
+
+                        drawmain2(width, height, new_maze, newX, newY);
+                        refresh();
+                        usleep(time_set);
                     }
-                    new_maze[newY][PosX + 1] = '*';
                     break;
                 } else {
-                    new_maze[y][PosX] = '*'; // Если нет бокового пространства, фиксируем снежинку
+                    // Если ни влево, ни вправо нельзя упасть, фиксируем снежинку на текущей позиции
+                    new_maze[y][PosX] = '*';
                     break;
                 }
             } else {
-                new_maze[y][PosX] = '*'; // Фиксируем снежинку
-                break;
+                // Если в столбце меньше двух снежинок, фиксируем снежинку на текущей позиции
+                new_maze[y][PosX] = '*';
             }
+            break;
         }
 
-        // Перемещаем снежинку вниз
+        // Обновляем позицию снежинки
         new_maze[y][PosX] = '.';  // Очищаем текущую позицию
         y++;
         new_maze[y][PosX] = '*';  // Перемещаем снежинку вниз
@@ -124,12 +138,11 @@ void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
         usleep(time_set);
     }
 
-    // Финальное размещение снежинки
+    // Окончательное размещение снежинки
     if (y == height - 1 || new_maze[y + 1][PosX] == '#') {
         new_maze[y][PosX] = '*';
     }
 }
-
 
 
 void keywork2(int width, int height, char new_maze[height][width]) {
@@ -145,10 +158,10 @@ void keywork2(int width, int height, char new_maze[height][width]) {
     if (key == 'e') {
         otrisovka_snega(PosY, PosX, new_maze);
     }
-    if (key == KEY_UP) {
+    if (key == KEY_UP && time_set>0) {
         time_set-= 100000;
     }
-    if (key == KEY_DOWN) {
+    if (key == KEY_DOWN && time_set<400000) {
         time_set+= 100000;
     }
 }
@@ -234,9 +247,9 @@ void menu() {
         } else {
             printw("%s\n", screen[i]);
         }
-        if (i == 4) {
-            print_wall_coordinates(width, height, new_maze);
-        }
+        // if (i == 4) {
+        //     print_wall_coordinates(width, height, new_maze);
+        // }
     }
 }
 
@@ -310,7 +323,7 @@ int main() {
                     createlab2(width, height, new_maze);
                     matrix_copy(width, height, maze, new_maze);
                     keypad(stdscr, FALSE);
-                    break; // Переключаем режим верхней строки
+                    break;
                 }
                 if (key == 27) {
                     keypad(stdscr, FALSE);
