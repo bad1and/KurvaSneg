@@ -38,6 +38,7 @@ int time_set = 200000;
 //     }
 // }
 
+
 //создаем матрицу
 void createlab2(int width, int height, char new_maze[height][width]) {
     for (int y = 0; y < height; y++) {
@@ -99,19 +100,19 @@ void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
                         break;
                     }
                     // если 2 есть то влево
-                    // snowflake МОГУ УБРАТЬ
-                    if (snowflake_count >= 2 && x > 0 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x - 1] == '.') {
-                        new_maze[y][x] = '.';
-                        new_maze[y + 1][x - 1] = '*';
-                        moved = true;
-                        break;
-                    }
+                    // snowflake МОГУ УБРАТЬ огр
+                    if (x > 0 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x - 1] == '.' && new_maze[y][x - 1] == '.' && new_maze[y + 2][x - 1] == '.') {
+                            new_maze[y][x] = '.';
+                            new_maze[y + 1][x - 1] = '*';
+                            moved = true;
+                            break;
+                        }
                     // вправо
-                    if (snowflake_count >= 2 && x < width - 1 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x + 1] == '.') {
-                        new_maze[y][x] = '.';
-                        new_maze[y + 1][x + 1] = '*';
-                        moved = true;
-                        break;
+                    if (x < width - 1 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x + 1] == '.' && new_maze[y][x + 1] == '.' && new_maze[y + 2][x + 1] == '.') {
+                            new_maze[y][x] = '.';
+                            new_maze[y + 1][x + 1] = '*';
+                            moved = true;
+                            break;
                     }
                 }
             }
@@ -190,7 +191,7 @@ void keywork(char maze[height][width]) {
     if (key == KEY_LEFT) {
         if (PosX > 0) PosX--;
     }
-    if (key == 'q') {
+    if (key == 'q' && PosY != 0) {
         maze[PosY][PosX] = '#';
     }
     if (key == 127) {
@@ -209,7 +210,7 @@ void createlab(int width, int height, char maze[height][width]) {
 
 void menu() {
     printw("%s", "Sneginki by Tikhanov Oleg\n");
-    printw("%s", "ver 0.1\n");
+    printw("%s", "ver 1.0\n");
     printw("%s", "\n");
     printw("%s", "Перед использованием прочитайте инструкцию 3 п.\n");
     printw("%s", "-----------------\n");
@@ -283,9 +284,9 @@ int main() {
             keypad(stdscr, TRUE);
             clear();
             while (true) {
-                printw("Введите размеры - ширину и высоту через пробел (240x67 max! 3x3 min!): ");
+                printw("Введите размеры - ширину и высоту через пробел (240x55 max! 3x3 min!): ");
                 scanw("%d %d", &width, &height);
-                if (width < 3 || height < 3 || width > 240 || height > 67) {
+                if (width < 3 || height < 3 || width > 240 || height > 55) {
                     clear();
                     printw("Неверные значения!\n");
                 } else {
