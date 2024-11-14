@@ -26,6 +26,7 @@ int time_set = 200000;
 //         }
 //     }
 // }
+
 // void print_wall_coordinates(int width, int height, char new_maze[height][width]) {
 //     printw("Координаты всех символов '#':\n");
 //     for (int y = 0; y < height; y++) {
@@ -67,22 +68,20 @@ void drawmain2(int width, int height, char new_maze[height][width], int PosX, in
 
 
 void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
-    // Проверка на первую строку: если под начальной позицией нет места, отменяем размещение снежинки
+    // первая строка запрет
     if (PosY == 0 && (new_maze[PosY + 1][PosX] == '#' || new_maze[PosY + 1][PosX] == '*')) {
         return;
     }
 
-    // Устанавливаем снежинку в начальной позиции
     new_maze[PosY][PosX] = '*';
 
-    // Цикл для симуляции падения снежинок по всему полю
-    bool moved;  // Флаг для отслеживания перемещения снежинок
+
+    bool moved;  // отслжка
     do {
-        moved = false;  // Сбрасываем флаг перед каждым проходом
-        for (int y = height - 2; y >= 0; y--) {  // Начинаем снизу вверх, чтобы не перезаписывать снежинки
+        moved = false;
+        for (int y = height - 2; y >= 0; y--) {  // снизу вверх
             for (int x = 0; x < width; x++) {
                 if (new_maze[y][x] == '*') {
-                    // Проверяем количество снежинок ниже текущей позиции
                     int snowflake_count = 0;
                     for (int check_y = y + 1; check_y < height; check_y++) {
                         if (new_maze[check_y][x] == '*') {
@@ -92,34 +91,38 @@ void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
                         }
                     }
 
-                    // Если под снежинкой пусто, перемещаем вниз
+                    //если пусто -  вниз
                     if (new_maze[y + 1][x] == '.') {
                         new_maze[y][x] = '.';
                         new_maze[y + 1][x] = '*';
                         moved = true;
+                        break;
                     }
-                    // Если под снежинкой есть препятствие и 2 снежинки внизу, проверяем падение влево
-                    else if (snowflake_count >= 2 && x > 0 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x - 1] == '.') {
+                    // если 2 есть то влево
+                    // snowflake МОГУ УБРАТЬ
+                    if (snowflake_count >= 2 && x > 0 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x - 1] == '.') {
                         new_maze[y][x] = '.';
                         new_maze[y + 1][x - 1] = '*';
                         moved = true;
+                        break;
                     }
-                    // Если под снежинкой есть препятствие и 2 снежинки внизу, проверяем падение вправо
-                    else if (snowflake_count >= 2 && x < width - 1 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x + 1] == '.') {
+                    // вправо
+                    if (snowflake_count >= 2 && x < width - 1 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x + 1] == '.') {
                         new_maze[y][x] = '.';
                         new_maze[y + 1][x + 1] = '*';
                         moved = true;
+                        break;
                     }
                 }
             }
         }
 
-        // Обновляем экран после каждого прохода
+
         drawmain2(width, height, new_maze, PosX, PosY);
         refresh();
         usleep(time_set);
 
-    } while (moved);  // Продолжаем цикл, пока есть перемещения
+    } while (moved); // пока перемещение
 }
 
 
@@ -144,6 +147,7 @@ void keywork2(int width, int height, char new_maze[height][width]) {
     }
 }
 
+
 void matrix_copy(int width, int height, char maze[height][width], char new_maze[height][width]) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -154,7 +158,7 @@ void matrix_copy(int width, int height, char maze[height][width], char new_maze[
 
 // отображаем маорицу
 void drawmain(int width, int height, char maze[height][width], int PosX, int PosY) {
-    clear(); // Очищаем экран
+    clear();
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             if (x == PosX && y == PosY) {
@@ -235,10 +239,10 @@ void menu() {
 void instruction (){
     printw("%s", "-------------------------------------------------------\n");
     printw("%s", "Используйте стрелки для перемещения\n");
-    printw("%s", "Вы - $\n");
-    printw("%s", "Q - установка стены, DELETE - удалить значение в клетке\n");
-    printw("%s", "S - установка старта, E - установка конца\n");
-    printw("%s", "P - расчет пути\n\n");
+    printw("%s", "Вы - $ или *\n");
+    printw("%s", "E - бросить снежинку, ВВЕРХ - ускорить, ВНИЗ - замедлить\n");
+    printw("%s", "Скорость usleep(чем меньше тем быстрее)\n");
+    printw("%s", "Q - поставить препятствие, DELETE - убрать препятствие, W - сохранить и выйти\n\n");
 
 }
 
@@ -321,11 +325,11 @@ int main() {
                 keypad(stdscr, FALSE);
             }else {
                 while (1) {
-                    keywork2(width, height, new_maze);
-                    if (key == 27) {  // Выход по клавише ESC
-                        keypad(stdscr, FALSE);
-                        break;
-                    }
+                        keywork2(width, height, new_maze);
+                        if (key == 27) {  // Выход по клавише ESC
+                            keypad(stdscr, FALSE);
+                            break;
+                        }
                 }
             }
         }
