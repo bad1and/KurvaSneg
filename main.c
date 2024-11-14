@@ -16,27 +16,26 @@ int sneg_counter = 0;
 int time_set = 200000;
 
 
-
-void print_zvezd_coordinates(int width, int height, char new_maze[height][width]) {
-    printw("Координаты всех символов '*':\n");
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            if (new_maze[y][x] == '*') {
-                printw("(%d, %d)\n", y, x);
-            }
-        }
-    }
-}
-void print_wall_coordinates(int width, int height, char new_maze[height][width]) {
-    printw("Координаты всех символов '#':\n");
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            if (new_maze[y][x] == '#') {
-                printw("(%d, %d)\n", y, x);
-            }
-        }
-    }
-}
+// void print_zvezd_coordinates(int width, int height, char new_maze[height][width]) {
+//     printw("Координаты всех символов '*':\n");
+//     for (int y = 0; y < height; y++) {
+//         for (int x = 0; x < width; x++) {
+//             if (new_maze[y][x] == '*') {
+//                 printw("(%d, %d)\n", y, x);
+//             }
+//         }
+//     }
+// }
+// void print_wall_coordinates(int width, int height, char new_maze[height][width]) {
+//     printw("Координаты всех символов '#':\n");
+//     for (int y = 0; y < height; y++) {
+//         for (int x = 0; x < width; x++) {
+//             if (new_maze[y][x] == '#') {
+//                 printw("(%d, %d)\n", y, x);
+//             }
+//         }
+//     }
+// }
 
 //создаем матрицу
 void createlab2(int width, int height, char new_maze[height][width]) {
@@ -66,82 +65,61 @@ void drawmain2(int width, int height, char new_maze[height][width], int PosX, in
     // print_zvezd_coordinates(width, height, new_maze);
 }
 
+
 void otrisovka_snega(int PosY, int PosX, char new_maze[height][width]) {
-    // Проверка первой строки: если под ней нет свободного места, отменяем размещение
+    // Проверка на первую строку: если под начальной позицией нет места, отменяем размещение снежинки
     if (PosY == 0 && (new_maze[PosY + 1][PosX] == '#' || new_maze[PosY + 1][PosX] == '*')) {
-        return; // Прерываем функцию, не создавая снежинку
+        return;
     }
 
-    int y = PosY;
-    int snowflake_count = 0;
+    // Устанавливаем снежинку в начальной позиции
+    new_maze[PosY][PosX] = '*';
 
-   for (int i = 0; i < height; i++) {
-        if (new_maze[i][PosX] == '*') {
-            snowflake_count++;
-        }
-    }
-
-    while (y < height - 1) {
-        // Проверка условия остановки при столкновении с # или другой снежинкой
-        if (new_maze[y + 1][PosX] == '#' || new_maze[y + 1][PosX] == '*') {
-            // Если в столбце уже две снежинки, пытаемся падать влево или вправо до упора
-            if (snowflake_count >= 2) {
-                int newX = PosX;
-                int newY = y;
-
-                // Пробуем упасть влево до упора
-                if (PosX > 0 && new_maze[y + 1][PosX - 1] == '.') {
-                    while (newY < height - 1 && new_maze[newY + 1][newX-1] == '.') {
-                        new_maze[newY][newX] = '.';      // Очищаем текущую позицию
-                        newX--;                     // Перемещаемся влево
-                        newY++;
-                        new_maze[newY][newX] = '*';      // Ставим снежинку на новое место
-
-                        drawmain2(width, height, new_maze, newX, newY);
-                        refresh();
-                        usleep(time_set);
+    // Цикл для симуляции падения снежинок по всему полю
+    bool moved;  // Флаг для отслеживания перемещения снежинок
+    do {
+        moved = false;  // Сбрасываем флаг перед каждым проходом
+        for (int y = height - 2; y >= 0; y--) {  // Начинаем снизу вверх, чтобы не перезаписывать снежинки
+            for (int x = 0; x < width; x++) {
+                if (new_maze[y][x] == '*') {
+                    // Проверяем количество снежинок ниже текущей позиции
+                    int snowflake_count = 0;
+                    for (int check_y = y + 1; check_y < height; check_y++) {
+                        if (new_maze[check_y][x] == '*') {
+                            snowflake_count++;
+                        } else {
+                            break;
+                        }
                     }
-                    break;
-                }
-                // Пробуем упасть вправо до упора
-                else if (PosX < width - 1 && new_maze[y + 1][PosX + 1] == '.') {
-                    while (newY < height - 1 && new_maze[newY + 1][newX + 1] == '.') {
-                        new_maze[newY][newX] = '.';      // Очищаем текущую позицию
-                        newX++;                          // Перемещаемся вправо
-                        newY++;
-                        new_maze[newY][newX] = '*';      // Ставим снежинку на новое место
 
-                        drawmain2(width, height, new_maze, newX, newY);
-                        refresh();
-                        usleep(time_set);
+                    // Если под снежинкой пусто, перемещаем вниз
+                    if (new_maze[y + 1][x] == '.') {
+                        new_maze[y][x] = '.';
+                        new_maze[y + 1][x] = '*';
+                        moved = true;
                     }
-                    break;
-                } else {
-                    // Если ни влево, ни вправо нельзя упасть, фиксируем снежинку на текущей позиции
-                    new_maze[y][PosX] = '*';
-                    break;
+                    // Если под снежинкой есть препятствие и 2 снежинки внизу, проверяем падение влево
+                    else if (snowflake_count >= 2 && x > 0 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x - 1] == '.') {
+                        new_maze[y][x] = '.';
+                        new_maze[y + 1][x - 1] = '*';
+                        moved = true;
+                    }
+                    // Если под снежинкой есть препятствие и 2 снежинки внизу, проверяем падение вправо
+                    else if (snowflake_count >= 2 && x < width - 1 && new_maze[y + 1][x] != '.' && new_maze[y + 1][x + 1] == '.') {
+                        new_maze[y][x] = '.';
+                        new_maze[y + 1][x + 1] = '*';
+                        moved = true;
+                    }
                 }
-            } else {
-                // Если в столбце меньше двух снежинок, фиксируем снежинку на текущей позиции
-                new_maze[y][PosX] = '*';
             }
-            break;
         }
 
-        // Обновляем позицию снежинки
-        new_maze[y][PosX] = '.';  // Очищаем текущую позицию
-        y++;
-        new_maze[y][PosX] = '*';  // Перемещаем снежинку вниз
-
-        drawmain2(width, height, new_maze, PosX, y);
+        // Обновляем экран после каждого прохода
+        drawmain2(width, height, new_maze, PosX, PosY);
         refresh();
         usleep(time_set);
-    }
 
-    // Окончательное размещение снежинки
-    if (y == height - 1 || new_maze[y + 1][PosX] == '#') {
-        new_maze[y][PosX] = '*';
-    }
+    } while (moved);  // Продолжаем цикл, пока есть перемещения
 }
 
 
